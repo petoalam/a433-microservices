@@ -1,0 +1,73 @@
+# versi Docker Compose
+version: "3.7"
+
+
+services:
+
+  item-app:
+    
+    # nama container
+    container_name: item-app
+    
+    # base image yang digunakan
+    image: yosi101/item-app:v1
+
+    # port mapping untuk port aplikasi dan port di host
+    ports:
+
+      - 80:8080
+
+    # letak dari working directory
+    working_dir: /app
+    
+    # agar item-db dapat diluncurkan dulu
+    depends_on: 
+
+      - item-db
+    
+    # restart policy untuk item-app
+    deploy:
+
+      restart_policy:
+
+        condition: on-failure
+
+        delay: 5s
+
+        max_attempts: 3
+
+        window: 120s
+
+    # networks untuk menghubungkan dengan item-db
+    networks:
+
+      - item-app-network
+
+  item-db:
+  
+    # nama container
+    container_name: item-db
+
+    # base image yang digunakan
+    image: mongo:3
+
+    # volume yang digunakan di item-db
+    volumes:
+
+      - app-db:/data/db
+
+    # networks untuk menghubungkan dengan item-app
+    networks:
+
+      - item-app-network
+
+
+volumes:
+
+  app-db:
+  
+networks:
+
+  item-app-network:
+
+    name: item-app-network
