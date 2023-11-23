@@ -1,0 +1,45 @@
+version: "3.2"
+services:
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    container_name: 'rabbitmq_container'
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+      - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+      - rabbitmq_network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+  order-service:
+    image: yosi101/order-service:latest
+    container_name: 'order-service'
+    ports:
+      - 3000:3000
+    depends_on:
+      - rabbitmq
+    environment:
+      NODE_ENV: production
+      AMQP_URL: amqp://guest:guest@rabbitmq:5672
+    restart: on-failure
+    networks:
+      - rabbitmq_network
+  shipping-service:
+    image: yosi101/shipping-service:latest
+    container_name: 'shipping-service'
+    ports:
+      - 3001:3001
+    depends_on:
+      - rabbitmq
+    environment:
+      NODE_ENV: production
+      AMQP_URL: amqp://guest:guest@rabbitmq:5672
+    restart: on-failure
+    networks:
+      - rabbitmq_network
+networks:
+  rabbitmq_network:
+    name: rabbitmq_network
+    driver: bridge
